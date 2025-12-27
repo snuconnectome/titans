@@ -1,7 +1,7 @@
 import torch
 import pytest
 from titans_pytorch.neuro.models import TitanNeuro
-from titans_pytorch.neuro.dataset import MockRaidersDataset
+from titans_pytorch.neuro.dataset import MockBudapestDataset
 
 def test_titan_neuro_forward_shape():
     # Setup
@@ -21,7 +21,7 @@ def test_titan_neuro_forward_shape():
 
 def test_titan_neuro_overfit_mock():
     # Can the model learn a simple pattern from Mock Data?
-    dataset = MockRaidersDataset(num_timepoints=10, spatial_shape=(16, 16, 16)) # Smaller for speed
+    dataset = MockBudapestDataset(num_timepoints=10, spatial_shape=(16, 16, 16)) # Smaller for speed
     data = dataset.get_full_sequence().unsqueeze(0) # Add Batch Dim: (1, 10, 1, 16, 16, 16)
     
     model = TitanNeuro(spatial_shape=(16, 16, 16), hidden_dim=32)

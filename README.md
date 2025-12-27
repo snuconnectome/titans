@@ -65,23 +65,23 @@ print(logits.shape) # torch.Size([1, 1024, 32000])
 *   **현재**: SwiFT는 4차원 윈도우 Attention을 사용합니다.
 *   **미래**: 공간적 특징($x_y, y_t, z_t$)은 Swin Transformer로 추출하고, **시간적 흐름($t$)은 Titans Memory로 모델링**하는 하이브리드 아키텍처를 구축합니다.
 
-#### 2. Raiders Dataset 검증
-*   **데이터셋**: [Haxby Lab Raiders Data](https://github.com/HaxbyLab/raiders_data) (영화 '레이더스' 시청 중 fMRI 데이터)
-*   **활용**: 영화 줄거리와 뇌 반응 사이의 장기적 의존성(Long-term Dependency)을 학습합니다.
-*   **Action**: Titans 모델이 영화 초반부의 복선(Context)을 기억했다가 후반부 뇌 반응을 예측할 수 있는지 검증합니다.
+#### 2. Grand Budapest Hotel (ds003017) 검증
+*   **데이터셋**: [OpenNeuro ds003017](https://openneuro.org/datasets/ds003017/versions/1.0.3) ('그랜드 부다페스트 호텔' 시청 중 fMRI)
+*   **활용**: 영화의 복잡한 사회적 상호작용과 시각적 전개에 따른 뇌 반응(Face Processing, Social Cognition)의 시간적 패턴을 학습합니다.
+*   **Action**: Titans 모델이 영화의 긴 서사 구조(Narrative Structure)를 기억하고 다음 프레임을 예측할 수 있는지 검증합니다.
 
 ### 🧪 실험 준비 (DataLad)
-실제 Raiders 데이터를 사용하기 위해서는 `git annex` 또는 `datalad`가 필요합니다.
+실제 ds003017 데이터를 사용하기 위해서는 `git annex` 또는 `datalad`가 필요합니다.
 
 ```bash
 # DataLad 설치
 sudo apt-get install git-annex
 pip install datalad
 
-# 데이터셋 다운로드 (실제 데이터 Fetch)
-datalad install https://github.com/HaxbyLab/raiders_data.git
-cd raiders_data
-datalad get sub001/BOLD/task001_run001/bold.nii.gz
+# 데이터셋 다운로드 (OpenNeuro)
+datalad install https://github.com/OpenNeuroDatasets/ds003017.git
+cd ds003017
+datalad get sub-01/func/sub-01_task-movie_bold.nii.gz
 ```
 
 ---

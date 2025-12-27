@@ -2,53 +2,51 @@ import torch
 from torch.utils.data import Dataset
 import numpy as np
 import os
+import glob
 
-class MockRaidersDataset(Dataset):
+class MockBudapestDataset(Dataset):
     """
-    Simulates the structure of the Haxby Lab Raiders fMRI dataset.
-    Used for TDD and verification when full data is not available.
-    
+    Simulates the structure of OpenNeuro ds003017 (The Grand Budapest Hotel).
     Shape: (Time, Channels, Depth, Height, Width)
-    SwiFT expects: (B, C, D, H, W, T) or similar. Titans usually expects (B, T, Feature).
-    
-    We will output: (Time, Channels, D, H, W) for a single subject run.
     """
     def __init__(self, num_timepoints=100, spatial_shape=(32, 32, 32), channels=1):
         self.num_timepoints = num_timepoints
         self.spatial_shape = spatial_shape
         self.channels = channels
-        
-        # synthetic data: [T, C, D, H, W]
         self.data = torch.randn(num_timepoints, channels, *spatial_shape)
-        
-        # Simulate some temporal correlation (HRF-like)
-        for t in range(1, num_timepoints):
-            self.data[t] = 0.8 * self.data[t-1] + 0.2 * torch.randn(channels, *spatial_shape)
 
     def __len__(self):
-        # In a real scenario, this might be number of subjects or runs.
-        # Here we treat the dataset as providing ONE sequence (the movie).
-        # But PyTorch Dataset usually returns *samples*.
-        # For fMRI language modeling, we might slice the long sequence into windows.
         return 1
 
     def get_full_sequence(self):
         return self.data
 
-class RealRaidersDataset(Dataset):
+class BudapestDataset(Dataset):
     """
-    Loader for actual NIfTI files from Raiders dataset.
-    Requires 'nibabel' and actual files.
+    Loader for OpenNeuro ds003017 BIDS dataset.
+    Expected structure: sub-XX/func/sub-XX_task-movie_bold.nii.gz
     """
-    def __init__(self, data_dir, mask_path=None):
-        self.data_dir = data_dir
-        self.files = [os.path.join(data_dir, f) for f in os.listdir(data_dir) if f.endswith('.nii.gz')]
+    def __init__(self, root_dir, subject_id='01', task_name='movie', chunk_size=None):
+        self.root_dir = root_dir
+        self.subject_id = subject_id
+        self.task_name = task_name
+        self.chunk_size = chunk_size
+        
+        # BIDS pattern matcher
+        # ds003017/sub-01/func/sub-01_task-movie_bold.nii.gz (Adjust based on actual file names found)
+        # Search for files
+        search_pattern = os.path.join(root_dir, f"sub-{subject_id}", "func", f"*task-{task_name}*_bold.nii.gz")
+        self.files = sorted(glob.glob(search_pattern))
+        
+        if not self.files:
+            print(f"Warning: No files found for pattern {search_pattern}")
+        
         try:
             import nibabel as nib
             self.nib = nib
         except ImportError:
             raise ImportError("Please install nibabel: pip install nibabel")
-            
+
     def __len__(self):
         return len(self.files)
     
@@ -64,5 +62,9 @@ class RealRaidersDataset(Dataset):
         
         # 2. Add Channel dim: T, 1, X, Y, Z
         data = data.unsqueeze(1)
+        
+        # Optional: Chunking logic if the sequence is too long for memory?
+        # But Titans is designed for infinite context, so we might return the whole thing
+        # or handle slicing in a collate_fn if making batches of subsequences.
         
         return data
