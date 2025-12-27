@@ -82,7 +82,7 @@ class TitanNeuro(nn.Module):
             encoder_final_shape=self.encoder.final_shape
         )
         
-    def forward(self, x):
+    def forward(self, x, use_chunked=False, chunk_size=64):
         """
         x: (Batch, Time, Channels, D, H, W)
         Returns: Prediction (Batch, Time, Channels, D, H, W) - Next Step Prediction
@@ -98,7 +98,10 @@ class TitanNeuro(nn.Module):
         # 2. Titan Neural Memory (Temporal Modeling)
         # We model the sequence of brain states
         # Output is (B, T, hidden_dim)
-        memory_out, _ = self.memory(embeddings)
+        if use_chunked:
+            memory_out, _ = self.memory.forward_chunked(embeddings, chunk_size=chunk_size)
+        else:
+            memory_out, _ = self.memory(embeddings)
         
         # 3. Spatial Decoding (Predict Next Brain State)
         memory_out_flat = memory_out.view(B*T, -1)
