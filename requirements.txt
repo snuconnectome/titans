@@ -1,0 +1,10 @@
+einops
+beartype
+nibabel
+nilearn
+datalad
+pytest
+pandas
+scipy
+matplotlib
+jupyterlab

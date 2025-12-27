@@ -1,0 +1,7 @@
+git
+git-annex
+curl
+wget
+tmux
+htop
+vim
