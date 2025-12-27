@@ -149,6 +149,18 @@ class NeuralMemory(nn.Module):
 
         return y_pred, new_state
 
+    def forward(self, x: Tensor, state: Optional[NeuralMemoryState] = None) -> Tuple[Tensor, NeuralMemoryState]:
+        batch_size, seq_len, _ = x.shape
+        if state is None:
+            state = self.get_initial_state(batch_size, x.device)
+        
+        outputs = []
+        for t in range(seq_len):
+            y_t, state = self.forward_step(x[:, t, :], state)
+            outputs.append(y_t)
+            
+        return torch.stack(outputs, dim=1), state
+
     def forward_chunked(
         self, 
         x: Tensor, 
