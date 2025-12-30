@@ -11,6 +11,9 @@
 3.  **Unified Architectures**: MAC, MAG, MAL 세 가지 모델 변형 모두 최신 엔진을 사용하도록 최적화되었습니다.
 
 ---
+---
+
+> **🚀 AI Workbench Deployment**: For experimental scripts, benchmarking pipelines, and GPU-optimized deployments (including Blackwell support), please visit the **[titan_fresh](https://github.com/snuconnectome/titan_fresh)** repository.
 
 ## 🚀 설치 및 시작하기
 
@@ -86,10 +89,41 @@ datalad get sub-01/func/sub-01_task-movie_bold.nii.gz
 
 ---
 
+## 🏆 Benchmark Leaderboard
+
+Titan-Neuro 모델의 성능을 평가하고 다른 모델과 비교할 수 있는 벤치마크 파이프라인이 포함되어 있습니다.
+
+### 실행 방법
+NVIDIA AI Workbench 컨테이너 내부 또는 필요한 패키지(`torch`, `tabulate`)가 설치된 환경에서 실행하세요.
+
+```bash
+# 벤치마크 실행 (Mock 데이터 사용)
+python benchmark_leaderboard.py
+```
+
+### 평가 지표
+1.  **MSE (Mean Squared Error)**: 예측된 뇌 상태와 실제 뇌 상태 간의 픽셀 단위 오차 (낮을수록 좋음)
+2.  **Voxel Correlation**: 시간에 따른 복셀 활성화 패턴의 유사도 (높을수록 좋음)
+3.  **Inference Time**: 처리 속도
+
+### 리더보드 예시
+```text
+🏆 NEURO-BENCHMARK LEADERBOARD 🏆
+============================================================
+| Model                    |   MSE |   Correlation |   Time |
+|--------------------------|-------|---------------|--------|
+| Identity (Baseline)      | 1.023 |         0.000 |   0.00 |
+| Titans-Neuro (Zero-Shot) | 0.854 |         0.412 |   0.15 |
+============================================================
+```
+
+---
+
 ## 🛠 코드 구조
 
 ```
 titans/
+├── benchmark_leaderboard.py    # 벤치마크 실행 스크립트
 ├── titans_pytorch/
 │   ├── memory/
 │   │   ├── neural_memory.py  # Titan V3 Core (Learnable Gates)
@@ -98,7 +132,10 @@ titans/
 │   │   ├── mac.py            # Memory as Context
 │   │   ├── mag.py            # Memory as Gate
 │   │   └── mal.py            # Memory as Layer
-│   └── utils.py
+│   └── neuro/                # Neuro-Specific Implementation
+│       ├── dataset.py        # fMRI Dataloader
+│       ├── metrics.py        # RSA, MSE, Correlation
+│       └── models.py         # 3D Encoder-Decoder + Titan Memory
 ├── tests/                    # pytest 테스트 스위트
 └── main.py                   # 검증 스크립트
 ```
