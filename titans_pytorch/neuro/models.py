@@ -109,3 +109,61 @@ class TitanNeuro(nn.Module):
         pred = pred_flat.view(B, T, C, D, H, W)
         
         return pred
+
+class TitanBrainEncoding(nn.Module):
+    """
+    Task 2: Brain Encoding (Stimulus -> Brain)
+    Predicts fMRI responses from stimulus features using Titan Neural Memory.
+    """
+    def __init__(self, stimulus_dim=40, voxel_dim=50000, hidden_dim=128):
+        super().__init__()
+        self.projector = nn.Linear(stimulus_dim, hidden_dim)
+        self.memory = NeuralMemory(dim=hidden_dim, layer_width=hidden_dim*2)
+        self.predictor = nn.Linear(hidden_dim, voxel_dim)
+
+    def forward(self, stimulus, use_chunked=False, chunk_size=64):
+        """
+        stimulus: (Batch, Time, FeatDim)
+        Returns: brain_pred: (Batch, Time, VoxelDim)
+        """
+        # 1. Project to hidden space
+        x = self.projector(stimulus)
+        
+        # 2. Temporal modeling with Titans
+        if use_chunked:
+            x, _ = self.memory.forward_chunked(x, chunk_size=chunk_size)
+        else:
+            x, _ = self.memory(x)
+            
+        # 3. Predict voxels
+        brain_pred = self.predictor(x)
+        return brain_pred
+
+class TitanSemanticDecoding(nn.Module):
+    """
+    Task 3: Semantic Decoding (Brain -> Stimulus)
+    Predicts stimulus features from fMRI responses using Titan Neural Memory.
+    """
+    def __init__(self, voxel_dim=50000, stimulus_dim=40, hidden_dim=128):
+        super().__init__()
+        self.projector = nn.Linear(voxel_dim, hidden_dim)
+        self.memory = NeuralMemory(dim=hidden_dim, layer_width=hidden_dim*2)
+        self.predictor = nn.Linear(hidden_dim, stimulus_dim)
+
+    def forward(self, brain, use_chunked=False, chunk_size=64):
+        """
+        brain: (Batch, Time, VoxelDim)
+        Returns: stimulus_pred: (Batch, Time, FeatDim)
+        """
+        # 1. Project to hidden space
+        x = self.projector(brain)
+        
+        # 2. Temporal modeling with Titans
+        if use_chunked:
+            x, _ = self.memory.forward_chunked(x, chunk_size=chunk_size)
+        else:
+            x, _ = self.memory(x)
+            
+        # 3. Predict stimulus features
+        stimulus_pred = self.predictor(x)
+        return stimulus_pred

@@ -6,7 +6,7 @@ def representational_similarity_analysis(
     activations_a: Tensor, 
     activations_b: Tensor, 
     method: str = 'correlation'
-) -> Tensor:
+) -> float:
     """
     Computes the RSA score between two sets of representations (e.g., Model Memory vs Brain fMRI).
     
@@ -16,12 +16,7 @@ def representational_similarity_analysis(
         method: 'correlation' or 'euclidean'
         
     Returns:
-        similarity_score: scalar or matrix representing the valid similarity.
-        
-    Logic:
-    1. Compute Representational Dissimilarity Matrix (RDM) for A. (N x N)
-    2. Compute RDM for B. (N x N)
-    3. Correlate the upper distinct triangles of RDM_A and RDM_B.
+        similarity_score: scalar representing the correlation between the RDMs.
     """
     
     # 1. Normalize
@@ -48,3 +43,36 @@ def representational_similarity_analysis(
     rsa_score = F.cosine_similarity(vec_a_centered.unsqueeze(0), vec_b_centered.unsqueeze(0))
     
     return rsa_score.item()
+
+def compute_mse(pred: Tensor, target: Tensor) -> float:
+    """
+    Computes Mean Squared Error between prediction and target.
+    """
+    return F.mse_loss(pred, target).item()
+
+def compute_voxel_correlation(pred: Tensor, target: Tensor) -> float:
+    """
+    Computes average voxel-wise correlation over time.
+    Inputs: (Batch, Time, ...)
+    """
+    # Flatten to (Batch, Time, Voxels)
+    B, T = pred.shape[:2]
+    pred_flat = pred.reshape(B, T, -1)
+    target_flat = target.reshape(B, T, -1)
+    
+    # Centering
+    pred_mean = pred_flat.mean(dim=1, keepdim=True)
+    target_mean = target_flat.mean(dim=1, keepdim=True)
+    
+    pred_centered = pred_flat - pred_mean
+    target_centered = target_flat - target_mean
+    
+    # Cosine similarity along Time dimension
+    # (B, Voxels)
+    numerator = (pred_centered * target_centered).sum(dim=1)
+    denominator = torch.sqrt((pred_centered ** 2).sum(dim=1)) * torch.sqrt((target_centered ** 2).sum(dim=1))
+    
+    # Avoid div by zero
+    correlation = numerator / (denominator + 1e-8)
+    
+    return correlation.mean().item()

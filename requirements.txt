@@ -8,3 +8,5 @@ pandas
 scipy
 matplotlib
 jupyterlab
+tabulate
+# torch (included in nvidia base image)
